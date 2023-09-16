@@ -11,6 +11,13 @@ export default function RealtimeMessages({
   const supabaseClient = useOutletContext<SupabaseClient<Database>>()
   const [messages, setMessages] = useState(serverMessages)
 
+  // Common pattern to trigger a re-render
+  // when local state depends on prop. Otherwise, nothing happens when
+  // the prop changes.
+  useEffect(() => {
+    setMessages(serverMessages)
+  }, [serverMessages, setMessages])
+
   useEffect(() => {
     const channel = supabaseClient
       .channel("*")
@@ -20,6 +27,8 @@ export default function RealtimeMessages({
         (payload) => {
           const newMessage = payload.new as ServerMessage
 
+          // Add the message to the UI if it doesn't exist yet, (typically,
+          // to avoid duplication in the sender's UI in case of optimistic UI)
           if (!messages.find((message) => message.id === newMessage.id)) {
             setMessages([...messages, newMessage])
           }
@@ -27,6 +36,7 @@ export default function RealtimeMessages({
       )
       .subscribe()
 
+    // Cleanup the resource
     return () => {
       supabaseClient.removeChannel(channel)
     }

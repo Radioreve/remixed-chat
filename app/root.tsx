@@ -50,6 +50,7 @@ export default function App() {
     createBrowserClient<Database>(env.URL!, env.ANON_KEY!),
   )
 
+  // For debug purposes only.
   useEffect(() => {
     if (revalidator !== prevRevalidatorRef.current) {
       console.log("revalidator object has changed")
@@ -64,12 +65,14 @@ export default function App() {
       if (session?.access_token != serverAccessToken) {
         revalidator.revalidate()
       } else {
-        console.log("Same token")
+        console.log("Same token: " + serverAccessToken)
       }
     })
     return () => {
       subscription.unsubscribe()
     }
+    // Oddly enougn, revalidator changes at each render, thereby
+    // turning this info an infinite rendering loop. No idea why.
   }, [serverAccessToken, supabaseBrowserClient.auth])
 
   return (
